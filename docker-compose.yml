@@ -1,0 +1,107 @@
+version: "3.9"
+
+# docker-compose.yml — Local development infrastructure + full-stack option.
+#
+# INFRASTRUCTURE ONLY (fastest for dev — keeps hot-reload):
+#   docker compose up -d postgres
+#   Then: make mcp | make api | make web   (three terminals)
+#
+# FULL STACK (prod-like, no hot-reload):
+#   docker compose --profile full up
+#
+# pgAdmin (optional):
+#   docker compose --profile pgadmin up -d
+#
+# TEARDOWN:
+#   docker compose down           ← stop containers
+#   docker compose down -v        ← also delete the postgres data volume
+
+services:
+  # ── Infrastructure ───────────────────────────────────────────────────────────
+  postgres:
+    image: postgres:16-alpine
+    container_name: coach_postgres
+    environment:
+      POSTGRES_USER: coach
+      POSTGRES_PASSWORD: coach_secret
+      POSTGRES_DB: confidence_coach
+    ports:
+      - "5433:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U coach -d confidence_coach"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+
+  pgadmin:
+    image: dpage/pgadmin4:latest
+    container_name: coach_pgadmin
+    environment:
+      PGADMIN_DEFAULT_EMAIL: admin@coach.local
+      PGADMIN_DEFAULT_PASSWORD: admin
+    ports:
+      - "5050:80"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    restart: unless-stopped
+    profiles:
+      - pgadmin
+      - full
+
+  # ── Application services (opt-in via --profile full) ─────────────────────────
+  mcp:
+    build:
+      context: ./mcp-server
+      dockerfile: Dockerfile
+    container_name: coach_mcp
+    env_file: ./mcp-server/.env
+    environment:
+      MCP_HOST: "0.0.0.0"
+      MCP_PORT: "8001"
+      PORT: "8001"
+    ports:
+      - "8001:8001"
+    restart: unless-stopped
+    profiles:
+      - full
+
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: coach_backend
+    env_file: ./backend/.env
+    environment:
+      # Override .env values to use Docker-internal hostnames
+      DATABASE_URL: postgresql+asyncpg://coach:coach_secret@postgres:5432/confidence_coach
+      MCP_SERVER_URL: http://mcp:8001/mcp
+    ports:
+      - "8000:8000"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      mcp:
+        condition: service_started
+    restart: unless-stopped
+    profiles:
+      - full
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: coach_frontend
+    ports:
+      - "5173:80"
+    depends_on:
+      - backend
+    restart: unless-stopped
+    profiles:
+      - full
+
+volumes:
+  postgres_data:

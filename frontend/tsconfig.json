@@ -1,0 +1,36 @@
+{
+  "compilerOptions": {
+    // Target modern JS — Vite handles transpilation for older browsers separately.
+    "target": "ES2020",
+    "useDefineForClassFields": true,
+    "lib": ["ES2020", "DOM", "DOM.Iterable"],
+    "module": "ESNext",
+    "skipLibCheck": true,
+
+    // Module resolution
+    "moduleResolution": "bundler",
+    "allowImportingTsExtensions": true,
+    "resolveJsonModule": true,
+    "isolatedModules": true,
+
+    // No emit — Vite handles transpilation, tsc only type-checks.
+    "noEmit": true,
+
+    // React JSX
+    "jsx": "react-jsx",
+
+    // Strict type checking — catch bugs at compile time, not runtime.
+    "strict": true,
+    "noUnusedLocals": true,
+    "noUnusedParameters": true,
+    "noFallthroughCasesInSwitch": true,
+
+    // Path alias matching vite.config.ts
+    "baseUrl": ".",
+    "paths": {
+      "@/*": ["src/*"]
+    }
+  },
+  "include": ["src"],
+  "references": [{ "path": "./tsconfig.node.json" }]
+}

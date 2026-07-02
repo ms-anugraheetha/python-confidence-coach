@@ -1,0 +1,98 @@
+[project]
+name = "confidence-coach-backend"
+version = "0.1.0"
+description = "Python Confidence Coach — FastAPI backend"
+readme = "README.md"
+requires-python = ">=3.12"
+
+dependencies = [
+    # ── Web framework ──────────────────────────────────────────────────────────
+    "fastapi>=0.115.0",           # The API framework. 0.115+ has the stable lifespan API.
+    "uvicorn[standard]>=0.30.0",  # ASGI server. [standard] adds reload + websocket support.
+
+    # ── Validation & settings ─────────────────────────────────────────────────
+    "pydantic>=2.7.0",            # Data validation everywhere. FastAPI uses this internally.
+    "pydantic-settings>=2.3.0",   # Reads .env files into typed Settings objects.
+
+    # ── Database ──────────────────────────────────────────────────────────────
+    "sqlalchemy[asyncio]>=2.0.30", # ORM + async engine. asyncio extra is required for await.
+    "asyncpg>=0.29.0",             # Async PostgreSQL driver used by SQLAlchemy under the hood.
+    "alembic>=1.13.0",             # Database migration tool. Every schema change is versioned.
+
+    # ── Auth ──────────────────────────────────────────────────────────────────
+    "python-jose[cryptography]>=3.3.0", # JWT signing and verification.
+    "passlib[bcrypt]>=1.7.4",           # Password hashing. bcrypt is the right choice here.
+
+    # ── HTTP client ───────────────────────────────────────────────────────────
+    "httpx>=0.27.0",  # Async HTTP client for calling the MCP server. requests is sync-only.
+
+    # ── Logging ───────────────────────────────────────────────────────────────
+    "structlog>=24.1.0",  # Structured logging. JSON in prod, pretty-print in dev.
+
+    # ── MCP ───────────────────────────────────────────────────────────────────
+    "fastmcp>=2.0.0",     # FastMCP client for calling the MCP server. Same lib the server uses.
+
+    # ── Google OAuth ──────────────────────────────────────────────────────────
+    "google-auth>=2.29.0",      # Verify Google ID tokens from the Sign-In button.
+
+    # ── Misc ──────────────────────────────────────────────────────────────────
+    "python-multipart>=0.0.9",  # Required for FastAPI form parsing.
+    "python-dotenv>=1.0.0",     # Loads .env file before pydantic-settings reads it.
+]
+
+[project.optional-dependencies]
+dev = [
+    # Testing
+    "pytest>=8.2.0",
+    "pytest-asyncio>=0.23.0",  # async def test_ support
+    "pytest-cov>=5.0.0",       # coverage reports
+    "httpx>=0.27.0",            # TestClient for FastAPI uses httpx
+
+    # Code quality
+    "ruff>=0.4.0",    # Linter + formatter. Replaces flake8, isort, pyupgrade.
+    "mypy>=1.10.0",   # Static type checker.
+
+    # Type stubs
+    "types-passlib>=1.7.7",
+]
+
+# ── Build system ──────────────────────────────────────────────────────────────
+# uv and pip both read this. Tells them how to build the package.
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["app"]
+
+# ── Ruff (linter + formatter) ─────────────────────────────────────────────────
+[tool.ruff]
+target-version = "py312"
+line-length = 100
+
+[tool.ruff.lint]
+select = [
+    "E",   # pycodestyle errors
+    "W",   # pycodestyle warnings
+    "F",   # pyflakes (unused imports, undefined names)
+    "I",   # isort (import ordering)
+    "B",   # flake8-bugbear (common bugs)
+    "UP",  # pyupgrade (modern Python syntax)
+]
+ignore = [
+    "B008",  # FastAPI uses function calls in default args (Depends). Allow it.
+]
+
+[tool.ruff.lint.isort]
+known-first-party = ["app"]
+
+# ── Mypy (static type checker) ────────────────────────────────────────────────
+[tool.mypy]
+python_version = "3.12"
+strict = true
+ignore_missing_imports = true   # Some third-party libs lack type stubs
+
+# ── Pytest ────────────────────────────────────────────────────────────────────
+[tool.pytest.ini_options]
+asyncio_mode = "auto"           # All async tests run without @pytest.mark.asyncio
+testpaths = ["tests"]

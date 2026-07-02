@@ -1,0 +1,46 @@
+[project]
+name = "confidence-coach-mcp"
+version = "0.1.0"
+description = "Python Confidence Coach — FastMCP tool server"
+readme = "README.md"
+requires-python = ">=3.12"
+
+dependencies = [
+    # ── MCP framework ─────────────────────────────────────────────────────────
+    "fastmcp>=2.0.0",       # Ergonomic MCP server. Generates schemas from type hints.
+
+    # ── AI ────────────────────────────────────────────────────────────────────
+    # Tools call Gemini via the OpenAI-compatible endpoint.
+    "openai>=1.30.0",
+
+    # ── Validation ────────────────────────────────────────────────────────────
+    "pydantic>=2.7.0",
+    "pydantic-settings>=2.3.0",  # Reads .env for API key + config.
+    "python-dotenv>=1.0.0",
+
+    # ── Logging ───────────────────────────────────────────────────────────────
+    "structlog>=24.1.0",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=8.2.0",
+    "pytest-asyncio>=0.23.0",
+    "ruff>=0.4.0",
+    "mypy>=1.10.0",
+]
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.ruff]
+target-version = "py312"
+line-length = 100
+
+[tool.ruff.lint]
+select = ["E", "W", "F", "I", "B", "UP"]
+
+[tool.pytest.ini_options]
+asyncio_mode = "auto"
+testpaths = ["tests"]
