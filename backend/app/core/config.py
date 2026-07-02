@@ -77,19 +77,27 @@ class Settings(BaseSettings):
     db_pool_size: int = 10
     db_max_overflow: int = 20
 
-    @field_validator("database_url")
+    @field_validator("database_url", mode="before")
     @classmethod
     def database_url_must_be_async(cls, v: str) -> str:
         """
         SQLAlchemy needs the +asyncpg driver prefix for async operation.
-        If someone pastes a sync URL, catch it here with a helpful message.
+
+        Managed Postgres providers (Render, Heroku, etc.) hand out plain
+        postgresql:// or postgres:// connection strings — they have no idea
+        our app needs the asyncpg driver. Rather than force everyone to
+        hand-edit the auto-populated DATABASE_URL, rewrite the scheme here.
         """
-        if not v.startswith("postgresql+asyncpg://"):
-            raise ValueError(
-                "DATABASE_URL must use the async driver: postgresql+asyncpg://... "
-                "(not postgresql:// or postgres://)"
-            )
-        return v
+        if v.startswith("postgresql+asyncpg://"):
+            return v
+        if v.startswith("postgresql://"):
+            return "postgresql+asyncpg://" + v[len("postgresql://"):]
+        if v.startswith("postgres://"):
+            return "postgresql+asyncpg://" + v[len("postgres://"):]
+        raise ValueError(
+            "DATABASE_URL must be a PostgreSQL connection string "
+            "(postgresql://, postgres://, or postgresql+asyncpg://)"
+        )
 
     # ── Groq ──────────────────────────────────────────────────────────────────
 
