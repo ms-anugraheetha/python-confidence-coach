@@ -23,14 +23,15 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 
 WORKDIR /build
 
-# Copy only the package manifest first to leverage Docker layer caching.
-# If pyproject.toml hasn't changed, pip install is skipped on rebuild.
-COPY pyproject.toml ./
+# Copy the package manifest + README first to leverage Docker layer caching.
+# (hatchling requires README.md to exist when building wheel metadata —
+# pyproject.toml declares readme = "README.md", so it must be present here.)
+COPY pyproject.toml README.md ./
 
 # Install the package in non-editable mode into an isolated prefix.
 # Using --no-build-isolation is NOT set — we want the full build chain.
 RUN pip install --upgrade pip \
- && pip install --prefix=/install --no-cache-dir ".[prod]"
+ && pip install --prefix=/install --no-cache-dir "."
 
 
 # ── Stage 2: runtime ──────────────────────────────────────────────────────────
