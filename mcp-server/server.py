@@ -200,6 +200,13 @@ def main() -> None:
         transport="streamable-http",
         host=settings.mcp_host,
         port=settings.mcp_port,
+        # FastMCP validates the Host header by default and rejects anything
+        # that isn't localhost/127.0.0.1 (DNS-rebinding protection). This
+        # server is only ever called internally (Render health checks +
+        # the backend's mcp_client), never directly by a browser, so it's
+        # safe to disable — equivalent validation happens at Render's network
+        # layer. Without this, every request 421s with "Misdirected Request".
+        host_origin_protection=False,
     )
 
 
