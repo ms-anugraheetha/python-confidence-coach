@@ -72,8 +72,11 @@ HEALTHCHECK --interval=30s --timeout=10s --start-period=30s --retries=3 \
 # Start uvicorn.
 # --host 0.0.0.0  → listen on all interfaces (required in containers)
 # --workers 1     → single worker; increase via env var on Render
+# Note: app/core/config.py requires LOG_LEVEL uppercase (DEBUG/INFO/...),
+# but uvicorn's CLI --log-level flag requires lowercase — lowercase it
+# here just for uvicorn, independent of what's stored in the env var.
 CMD uvicorn app.main:app \
     --host 0.0.0.0 \
     --port "$PORT" \
     --workers "${UVICORN_WORKERS:-1}" \
-    --log-level "${LOG_LEVEL:-info}"
+    --log-level "$(echo "${LOG_LEVEL:-info}" | tr 'A-Z' 'a-z')"
