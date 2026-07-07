@@ -31,9 +31,9 @@ services:
       - key: MCP_HOST
         value: "0.0.0.0"
       - key: PORT
-        value: "8001"
+        value: "10000"
       - key: MCP_PORT
-        value: "8001"
+        value: "10000"
 
   # ── FastAPI Backend ──────────────────────────────────────────────────────────
   - type: web
@@ -69,7 +69,7 @@ services:
       - key: ENVIRONMENT
         value: production
       - key: LOG_LEVEL
-        value: info
+        value: INFO
 
   # ── Managed PostgreSQL ───────────────────────────────────────────────────────
 databases:
