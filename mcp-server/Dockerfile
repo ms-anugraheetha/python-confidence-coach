@@ -33,10 +33,10 @@ RUN pip install --upgrade pip \
 RUN chown -R mcp:mcp /app
 USER mcp
 
-# Render injects PORT; default to 8001
-ENV PORT=8001
-
-EXPOSE $PORT
+# Literal port number so Render's Dockerfile port auto-detection (which does
+# a static parse of EXPOSE, not a real variable substitution) picks it up.
+# Must match the PORT/MCP_PORT env var set in Render's dashboard.
+EXPOSE 8001
 
 HEALTHCHECK --interval=30s --timeout=10s --start-period=20s --retries=3 \
     CMD python -c "import urllib.request; urllib.request.urlopen('http://localhost:${PORT}/health')" || exit 1
