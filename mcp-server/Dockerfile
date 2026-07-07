@@ -16,19 +16,19 @@ RUN groupadd -r mcp && useradd -r -g mcp mcp
 
 WORKDIR /app
 
-# Copy package manifest + readme first for layer caching
-# (hatchling requires README.md to exist when building wheel metadata)
+# Copy package manifest + readme + source before install — hatchling needs
+# the actual files present to build the wheel (flat layout, explicit file
+# selection in pyproject.toml), so this step can't be cache-split from source.
 COPY pyproject.toml README.md ./
-
-# Install dependencies
-RUN pip install --upgrade pip \
- && pip install --no-cache-dir "."
-
-# Copy source code
+COPY config.py ./
 COPY models/ ./models/
 COPY prompts/ ./prompts/
 COPY tools/ ./tools/
 COPY server.py ./
+
+# Install dependencies + local package
+RUN pip install --upgrade pip \
+ && pip install --no-cache-dir "."
 
 RUN chown -R mcp:mcp /app
 USER mcp
